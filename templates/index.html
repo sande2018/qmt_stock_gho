@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>记账板</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f5f6fa;
+  --card:#ffffff;
+  --card-hover:#f0f2f8;
+  --surface:#eef0f6;
+  --text:#1a1a2e;
+  --text2:#6b7280;
+  --dim:#9ca3af;
+  --border:rgba(0,0,0,.08);
+  --red:#e03131;
+  --red-bg:rgba(224,49,49,.1);
+  --green:#00a070;
+  --green-bg:rgba(0,160,112,.1);
+  --gold:#d4a40b;
+  --gold-bg:rgba(212,164,11,.1);
+  --blue:#1e8cc8;
+  --blue-bg:rgba(30,140,200,.1);
+}
+html,body{
+  background:var(--bg);color:var(--text);font-size:14px;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  overflow-x:hidden;
+}
+.wrap{max-width:500px;margin:0 auto;padding-bottom:70px}
+
+/* ===== 顶部导航栏 ===== */
+.topbar{
+  position:sticky;top:0;z-index:200;
+  background:linear-gradient(180deg,#ffffff 0%,rgba(255,255,255,.92) 100%);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  padding:12px 16px 10px;
+  border-bottom:1px solid var(--border);
+}
+.topbar-row{display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;align-items:center;gap:8px}
+.brand-icon{
+  width:28px;height:28px;border-radius:8px;
+  background:linear-gradient(135deg,#f23645,#f0b90b);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800;color:#fff;
+}
+.brand-name{font-size:16px;font-weight:700;letter-spacing:.3px}
+.live-dot{
+  width:6px;height:6px;border-radius:50%;background:#00b07c;
+  margin-left:6px;display:inline-block;
+  animation:blink 2s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.time-tag{
+  font-size:10px;color:var(--dim);
+  background:var(--surface);padding:3px 8px;border-radius:6px;
+}
+
+/* ===== 账户资产面板 ===== */
+.asset-panel{padding:16px}
+.asset-main{
+  background:linear-gradient(135deg,#ffffff 0%,#f0f4ff 100%);
+  border-radius:16px;padding:20px;
+  border:1px solid rgba(0,0,0,.06);
+  position:relative;overflow:hidden;
+}
+.asset-main::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle,rgba(224,49,49,.06),transparent 70%);
+}
+.asset-label{font-size:12px;color:var(--dim);letter-spacing:1px;margin-bottom:6px}
+.asset-total{font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:16px}
+.asset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.asset-item{position:relative}
+.asset-item:not(:last-child)::after{
+  content:'';position:absolute;right:-6px;top:4px;bottom:4px;
+  width:1px;background:rgba(0,0,0,.06);
+}
+.asset-item-label{font-size:10px;color:var(--dim);margin-bottom:4px;letter-spacing:.5px}
+.asset-item-value{font-size:14px;font-weight:700}
+
+/* ===== 盈亏概览条 ===== */
+.pnl-bar{
+  margin:0 16px 12px;padding:12px 16px;
+  border-radius:12px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.pnl-bar.profit{background:var(--red-bg);border:1px solid rgba(242,54,69,.15)}
+.pnl-bar.loss{background:var(--green-bg);border:1px solid rgba(0,176,124,.15)}
+.pnl-bar.flat{background:var(--surface);border:1px solid var(--border)}
+.pnl-label{font-size:12px;color:var(--text2)}
+.pnl-value{font-size:16px;font-weight:700}
+
+/* ===== Tab 导航 ===== */
+.tabs{
+  display:flex;padding:0 16px;margin-bottom:4px;
+  border-bottom:1px solid var(--border);
+}
+.tab{
+  flex:1;text-align:center;padding:10px 0 8px;
+  font-size:13px;font-weight:600;color:var(--dim);
+  cursor:pointer;position:relative;transition:color .2s;
+  border:none;background:none;outline:none;
+}
+.tab.active{color:var(--text)}
+.tab.active::after{
+  content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);
+  width:20px;height:2px;border-radius:1px;
+  background:var(--red);
+}
+.tab .badge{
+  font-size:9px;background:var(--surface);color:var(--dim);
+  padding:1px 5px;border-radius:6px;margin-left:4px;
+  vertical-align:middle;font-weight:500;
+}
+.tab.active .badge{background:var(--red-bg);color:var(--red)}
+
+/* ===== 内容区 ===== */
+.panel{display:none;padding:8px 12px}
+.panel.active{display:block}
+
+/* ===== 持仓卡片 ===== */
+.stock-card{
+  background:var(--card);border-radius:12px;
+  margin-bottom:8px;overflow:hidden;
+  border:1px solid var(--border);
+  transition:background .15s;
+}
+.stock-card:active{background:var(--card-hover)}
+.stock-card-inner{padding:14px 16px}
+.stock-top{display:flex;justify-content:space-between;align-items:flex-start}
+.stock-info{flex:1;min-width:0}
+.stock-name{font-size:15px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stock-code{font-size:11px;color:var(--dim)}
+.stock-right{text-align:right;flex-shrink:0;margin-left:12px}
+.stock-price{font-size:16px;font-weight:800;letter-spacing:-.3px}
+.stock-change{
+  display:inline-block;font-size:11px;font-weight:600;
+  padding:2px 6px;border-radius:4px;margin-top:3px;
+}
+.stock-change.up{color:var(--red);background:var(--red-bg)}
+.stock-change.down{color:var(--green);background:var(--green-bg)}
+.stock-change.flat{color:var(--dim);background:var(--surface)}
+.stock-detail{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  padding-top:12px;margin-top:12px;
+  border-top:1px solid var(--border);
+}
+.stock-detail-item{}
+.stock-detail-label{font-size:10px;color:var(--dim);margin-bottom:4px}
+.stock-detail-val{font-size:12px;font-weight:600;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stock-detail-sub{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* 盈亏色条 */
+.stock-card::before{
+  content:'';display:block;height:2px;
+}
+.stock-card.profit::before{background:linear-gradient(90deg,var(--red),rgba(242,54,69,.2))}
+.stock-card.loss::before{background:linear-gradient(90deg,var(--green),rgba(0,176,124,.2))}
+.stock-card.flat::before{background:var(--border)}
+
+/* ===== 委托卡片 ===== */
+.order-card{
+  background:var(--card);border-radius:10px;
+  padding:12px 14px;margin-bottom:6px;
+  border:1px solid var(--border);
+}
+.order-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.order-name{display:flex;align-items:center;gap:6px}
+.order-stock{font-size:13px;font-weight:600}
+.order-side{
+  font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;
+  letter-spacing:.5px;
+}
+.order-side.buy{color:var(--red);background:var(--red-bg)}
+.order-side.sell{color:var(--green);background:var(--green-bg)}
+.order-status{
+  font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;
+}
+.order-status.active{color:var(--gold);background:var(--gold-bg)}
+.order-status.filled{color:var(--green);background:var(--green-bg)}
+.order-status.cancelled{color:var(--dim);background:var(--surface)}
+.order-status.error{color:var(--red);background:var(--red-bg)}
+.order-bottom{display:flex;justify-content:space-between;align-items:flex-end}
+.order-meta{font-size:11px;color:var(--dim);line-height:1.6}
+.order-price-info{text-align:right}
+.order-price-val{font-size:14px;font-weight:700}
+.order-vol{font-size:11px;color:var(--dim);margin-top:2px}
+
+/* ===== 成交卡片 ===== */
+.deal-card{
+  background:var(--card);border-radius:10px;
+  padding:10px 14px;margin-bottom:6px;
+  border:1px solid var(--border);
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
+  align-items:center;
+}
+.deal-cell{}
+.deal-cell-label{font-size:9px;color:var(--dim);margin-bottom:2px;letter-spacing:.5px}
+.deal-cell-val{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.deal-cell-sub{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.deal-cell .dir-buy{color:var(--red);font-weight:700}
+.deal-cell .dir-sell{color:var(--green);font-weight:700}
+
+/* ===== 颜色 ===== */
+.c-up{color:var(--red)}.c-dn{color:var(--green)}.c-flat{color:var(--dim)}
+
+/* ===== 空状态 ===== */
+.empty-state{
+  text-align:center;padding:40px 20px;color:var(--dim);
+}
+.empty-icon{font-size:36px;margin-bottom:10px;opacity:.4}
+.empty-text{font-size:13px}
+
+/* ===== 底部刷新条 ===== */
+.bottom-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(255,255,255,.95);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);
+  padding:8px 16px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:11px;color:var(--dim);
+}
+.bottom-bar .countdown{color:var(--gold);font-weight:600}
+.bottom-bar .lock-text{display:flex;align-items:center;gap:4px}
+
+/* ===== 加载动画 ===== */
+.loading{display:flex;justify-content:center;padding:30px;gap:4px}
+.loading span{
+  width:6px;height:6px;border-radius:50%;background:var(--dim);
+  animation:bounce .6s ease-in-out infinite;
+}
+.loading span:nth-child(2){animation-delay:.1s}
+.loading span:nth-child(3){animation-delay:.2s}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* ===== 滚动条 ===== */
+::-webkit-scrollbar{width:0;height:0}
+
+/* ===== 安全区 ===== */
+@supports(padding-bottom:env(safe-area-inset-bottom)){
+  .bottom-bar{padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+  .wrap{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- 顶部栏 -->
+  <div class="topbar">
+    <div class="topbar-row">
+      <div class="brand">
+        <div class="brand-icon">Q</div>
+        <div>
+          <span class="brand-name">记账板</span>
+          <span class="live-dot" id="dot"></span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="time-tag" id="utime">--:--:--</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 资产面板 -->
+  <div class="asset-panel">
+    <div class="asset-main">
+      <div id="asset-top-wrap">
+        <div class="asset-label">总资产 (元)</div>
+        <div class="asset-total mono" id="v-total">--</div>
+      </div>
+      <div class="asset-grid">
+        <div class="asset-item" id="avail-wrap">
+          <div class="asset-item-label">可用资金</div>
+          <div class="asset-item-value mono" id="v-avail">--</div>
+        </div>
+        <div class="asset-item">
+          <div class="asset-item-label">持仓市值</div>
+          <div class="asset-item-value mono" id="v-market">--</div>
+        </div>
+        <div class="asset-item">
+          <div class="asset-item-label">今日盈亏</div>
+          <div class="asset-item-value mono" id="v-profit">--</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 导航 -->
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="positions">
+      持仓 <span class="badge" id="pos-badge">0</span>
+    </button>
+    <button class="tab" data-tab="orders">
+      委托 <span class="badge" id="ord-badge">0</span>
+    </button>
+    <button class="tab" data-tab="trades">
+      成交 <span class="badge" id="deal-badge">0</span>
+    </button>
+  </div>
+
+  <!-- 持仓面板 -->
+  <div class="panel active" id="panel-positions">
+    <div id="pos-list">
+      <div class="loading"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <!-- 委托面板 -->
+  <div class="panel" id="panel-orders">
+    <div id="ord-list">
+      <div class="loading"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <!-- 成交面板 -->
+  <div class="panel" id="panel-trades">
+    <div id="deal-wrap">
+      <div class="loading"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 底部状态栏 -->
+<div class="bottom-bar">
+  <div class="lock-text">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+    </svg>
+    只读模式
+  </div>
+  <div>
+    <span id="cd" class="countdown">30</span>s 后刷新
+  </div>
+</div>
+
+<script>
+(function(){
+  var REFRESH = 30;
+  var cd = REFRESH;
+
+  // ===== Tab 切换 =====
+  document.getElementById('tabs').addEventListener('click', function(e){
+    var tab = e.target.closest('.tab');
+    if(!tab) return;
+    document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+    document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active')});
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+
+  // ===== 初始化数据 =====
+  {% if data %}
+  render({{ data | tojson | safe }});
+  {% endif %}
+
+  // ===== 定时刷新 =====
+  setInterval(function(){
+    cd--;
+    var el = document.getElementById('cd');
+    if(el) el.textContent = cd;
+    if(cd <= 0){
+      cd = REFRESH;
+      fetch('/api/data').then(function(r){return r.json()}).then(function(d){
+        if(!d.error) render(d);
+      }).catch(function(){});
+    }
+  }, 1000);
+
+  // ===== 渲染 =====
+  function render(d){
+    if(!d) return;
+
+    // 时间
+    var ut = d.update_time || '';
+    document.getElementById('utime').textContent = '更新时间：' + (ut ? ut.substring(5, 16).replace('-', '/') : '--:--:--');
+
+    // 账户
+    var acc = d.account || {};
+    var hasMarketOrProfit = (acc.market_value !== undefined || acc.float_profit !== undefined);
+    var assetPanel = document.querySelector('.asset-panel');
+    if (hasMarketOrProfit) {
+      assetPanel.style.display = '';
+      // 总资产和可用资金：有权限才显示，否则隐藏
+      var totalWrap = document.getElementById('asset-top-wrap');
+      var availWrap = document.getElementById('avail-wrap');
+      if (acc.total_assets !== undefined && acc.available !== undefined) {
+        totalWrap.style.display = '';
+        availWrap.style.display = '';
+        document.getElementById('v-total').textContent = fmtMoney(acc.total_assets);
+        document.getElementById('v-avail').textContent = fmtMoney(acc.available);
+      } else {
+        totalWrap.style.display = 'none';
+        availWrap.style.display = 'none';
+      }
+      document.getElementById('v-market').textContent = fmtMoney(acc.market_value);
+      var profitEl = document.getElementById('v-profit');
+      profitEl.textContent = fmtSigned(acc.float_profit);
+      profitEl.className = 'asset-item-value mono ' + cc(acc.float_profit);
+    } else {
+      assetPanel.style.display = 'none';
+    }
+
+    // 持仓
+    var hasPositions = (d.positions !== undefined && d.positions !== null);
+    var posTab = document.querySelector('[data-tab="positions"]');
+    var posPanel = document.getElementById('panel-positions');
+    if (hasPositions) {
+      posTab.style.display = '';
+      posPanel.style.display = '';
+      var pos = d.positions || [];
+      document.getElementById('pos-badge').textContent = pos.length;
+      document.getElementById('pos-list').innerHTML = pos.length === 0
+        ? '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">暂无持仓</div></div>'
+        : pos.map(renderPos).join('');
+    } else {
+      posTab.style.display = 'none';
+      posPanel.style.display = 'none';
+      // 如果当前激活的是持仓面板，切换到委托面板
+      if (document.querySelector('.panel.active') === posPanel) {
+        var firstTab = document.querySelector('.tab[style*="none"] ~ .tab') || document.querySelector('.tab:not([style*="none"])');
+        if (firstTab) firstTab.click();
+      }
+    }
+
+    // 委托
+    var ords = d.pending_orders || [];
+    ords.sort(function(a,b){ return timeVal(b.time) - timeVal(a.time); });
+    var active = ords.filter(function(o){return o.is_active}).length;
+    document.getElementById('ord-badge').textContent = active + '/' + ords.length;
+    document.getElementById('ord-list').innerHTML = ords.length === 0
+      ? '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">暂无委托记录</div></div>'
+      : ords.map(renderOrd).join('');
+
+    // 成交
+    var trades = d.today_trades || [];
+    trades.sort(function(a,b){ return timeVal(b.time) - timeVal(a.time); });
+    document.getElementById('deal-badge').textContent = trades.length;
+    document.getElementById('deal-wrap').innerHTML = trades.length === 0
+      ? '<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">暂无成交记录</div></div>'
+      : renderDeals(trades);
+  }
+
+  // ===== 持仓渲染 =====
+  function renderPos(p){
+    var cls = p.float_profit > 0 ? 'profit' : (p.float_profit < 0 ? 'loss' : 'flat');
+    var chgCls = p.today_change > 0 ? 'up' : (p.today_change < 0 ? 'down' : 'flat');
+    var chgStr = (p.today_change >= 0 ? '+' : '') + p.today_change.toFixed(2) + '%';
+    var prStr = (p.profit_rate >= 0 ? '+' : '') + p.profit_rate.toFixed(2) + '%';
+    var profitColor = cc(p.float_profit);
+
+    return '<div class="stock-card ' + cls + '">'
+      + '<div class="stock-card-inner">'
+      + '<div class="stock-top">'
+      + '<div class="stock-info">'
+      + '<div class="stock-name">' + p.stock_name + '</div>'
+      + '<div class="stock-code">' + p.stock_code + '</div>'
+      + '</div>'
+      + '<div class="stock-right">'
+      + '<div class="stock-price ' + profitColor + '">' + (p.current_price > 0 ? p.current_price.toFixed(3) : '--') + '</div>'
+      + '<div class="stock-change ' + chgCls + '">' + chgStr + '</div>'
+      + '</div></div>'
+      + '<div class="stock-detail">'
+      + sdi2('市值', p.stock_name, fmtMoney(p.market_value))
+      + sdi2('盈亏', '<span class="' + profitColor + '">' + fmtSigned(p.float_profit) + '</span>', '<span class="' + profitColor + '">' + prStr + '</span>')
+      + sdi2('持仓/可用', p.volume + '股', (p.can_use_volume || 0) + '股')
+      + sdi2('成本/现价', p.cost_price.toFixed(3), (p.current_price > 0 ? p.current_price.toFixed(3) : '--'))
+      + '</div></div></div>';
+  }
+
+  function sdi2(label, v1, v2){
+    return '<div class="stock-detail-item"><div class="stock-detail-label">' + label + '</div><div class="stock-detail-val">' + v1 + '</div><div class="stock-detail-sub">' + v2 + '</div></div>';
+  }
+
+  // ===== 委托渲染 =====
+  function renderOrd(o){
+    var sideCls = o.direction === '买入' ? 'buy' : 'sell';
+    var stCls, stTxt;
+    if(o.is_active){ stCls = 'active'; stTxt = '⏳ ' + o.status; }
+    else if(o.status_code === 52){ stCls = 'filled'; stTxt = '✓ 全成'; }
+    else if(o.status_code === 54){ stCls = 'error'; stTxt = '✗ 废单'; }
+    else if(o.status_code === 53 || o.status_code === 51){ stCls = 'cancelled'; stTxt = '↩ ' + o.status; }
+    else { stCls = 'cancelled'; stTxt = o.status; }
+
+    var volInfo = o.traded_volume + '/' + o.volume + '股';
+    if(o.remaining > 0) volInfo += ' (余' + o.remaining + ')';
+
+    return '<div class="order-card">'
+      + '<div class="order-top">'
+      + '<div class="order-name">'
+      + '<span class="order-stock">' + o.stock_name + '(' + o.stock_code + ')' + '</span>'
+      + '<span class="order-side ' + sideCls + '">' + o.direction + '</span>'
+      + '</div>'
+      + '<span class="order-status ' + stCls + '">' + stTxt + '</span>'
+      + '</div>'
+      + '<div class="order-bottom">'
+      + '<div class="order-meta">' + fmtTime(o.time) + ' · ' + o.remark + '</div>'
+      + '<div class="order-price-info">'
+      + '<div class="order-price-val">' + o.price.toFixed(3) + '</div>'
+      + '<div class="order-vol">' + volInfo + '</div>'
+      + '</div></div></div>';
+  }
+
+  // ===== 成交渲染 =====
+  function renderDeals(ts){
+    var h = '';
+    ts.forEach(function(t){
+      var dcls = t.direction === '买入' ? 'dir-buy' : 'dir-sell';
+      h += '<div class="deal-card">'
+        + dcell('委托时间', t.stock_name, fmtTime(t.time))
+        + dcell('均价/数量', t.price.toFixed(3), t.volume + '股')
+        + dcell('金额/方向', fmtNum(t.amount), '<span class="' + dcls + '">' + t.direction + '</span>')
+        + '</div>';
+    });
+    return h;
+  }
+
+  function dcell(label, v1, v2){
+    return '<div class="deal-cell"><div class="deal-cell-label">' + label + '</div><div class="deal-cell-val">' + v1 + '</div><div class="deal-cell-sub">' + v2 + '</div></div>';
+  }
+
+  // ===== 工具函数 =====
+  function fmtMoney(v){
+    if(v === undefined || v === null) return '--';
+    if(Math.abs(v) >= 100000000) return (v / 100000000).toFixed(2) + '亿';
+    if(Math.abs(v) >= 10000) return (v / 10000).toFixed(2) + '万';
+    return v.toFixed(2);
+  }
+  function fmtSigned(v){
+    if(v === undefined || v === null) return '--';
+    var prefix = v > 0 ? '+' : '';
+    if(Math.abs(v) >= 10000) return prefix + (v / 10000).toFixed(2) + '万';
+    return prefix + v.toFixed(2);
+  }
+  function fmtNum(v){
+    if(v === undefined || v === null) return '--';
+    return v.toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+  function cc(v){ return v > 0 ? 'c-up' : (v < 0 ? 'c-dn' : 'c-flat'); }
+  function fmtTime(t){
+    if(!t) return '--';
+    t = String(t);
+    // 去掉毫秒部分 (如 092502.000)
+    var dot = t.indexOf('.');
+    if(dot > -1) t = t.substring(0, dot);
+    // 已有冒号则直接返回 (如 14:59:01)
+    if(t.indexOf(':') > -1) return t;
+    // 5位数补前导零 → 6位 (如 93000 → 093000)
+    if(t.length === 5) t = '0' + t;
+    // 092502 → 09:25:02
+    if(t.length >= 6) t = t.substring(0,2) + ':' + t.substring(2,4) + ':' + t.substring(4,6);
+    return t;
+  }
+  function timeVal(t){
+    // 将时间字符串转为秒数，用于排序比较
+    if(!t) return 0;
+    t = String(t);
+    var dot = t.indexOf('.');
+    if(dot > -1) t = t.substring(0, dot);
+    var h = 0, m = 0, s = 0;
+    if(t.indexOf(':') > -1){
+      var parts = t.split(':');
+      h = parseInt(parts[0]) || 0;
+      m = parseInt(parts[1]) || 0;
+      s = parseInt(parts[2]) || 0;
+    } else {
+      if(t.length === 5) t = '0' + t;
+      if(t.length >= 6){
+        h = parseInt(t.substring(0,2)) || 0;
+        m = parseInt(t.substring(2,4)) || 0;
+        s = parseInt(t.substring(4,6)) || 0;
+      }
+    }
+    return h * 3600 + m * 60 + s;
+  }
+
+})();
+</script>
+</body>
+</html>

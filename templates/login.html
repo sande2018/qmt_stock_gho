@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>记账板 - 登录</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  height:100%;
+  font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;
+  background:#f5f6fa;color:#1a1a2e;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-font-smoothing:antialiased;
+}
+.login-box{
+  width:320px;padding:32px 28px;
+  background:#fff;border-radius:16px;
+  box-shadow:0 2px 16px rgba(0,0,0,.08);
+  text-align:center;
+}
+.login-icon{
+  width:48px;height:48px;border-radius:12px;
+  background:linear-gradient(135deg,#e03131,#d4a40b);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:800;color:#fff;
+  margin-bottom:16px;
+}
+.login-title{font-size:20px;font-weight:700;margin-bottom:4px}
+.login-sub{font-size:12px;color:#9ca3af;margin-bottom:24px}
+.login-input{
+  width:100%;padding:12px 14px;font-size:15px;
+  border:1px solid #e0e3eb;border-radius:10px;
+  outline:none;text-align:center;letter-spacing:4px;
+  transition:border-color .2s;
+}
+.login-input:focus{border-color:#e03131}
+.login-btn{
+  width:100%;margin-top:14px;padding:12px;
+  font-size:15px;font-weight:600;color:#fff;
+  background:linear-gradient(135deg,#e03131,#d4a40b);
+  border:none;border-radius:10px;cursor:pointer;
+  transition:opacity .2s;
+}
+.login-btn:active{opacity:.85}
+.login-error{
+  margin-top:12px;font-size:13px;color:#e03131;
+}
+</style>
+</head>
+<body>
+<div class="login-box">
+  <div class="login-icon">Q</div>
+  <div class="login-title">记账板</div>
+  <div class="login-sub">请输入访问密码</div>
+  <form method="post">
+    <input class="login-input" type="password" name="password" placeholder="输入密码" autofocus>
+    <button class="login-btn" type="submit">登 录</button>
+  </form>
+  {% if error %}
+  <div class="login-error">{{ error }}</div>
+  {% endif %}
+</div>
+</body>
+</html>
